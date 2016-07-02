@@ -1,16 +1,17 @@
 import numpy as np
 import random
+from math import sin, sqrt
 ''' Problem Definition'''
 
  
-def z=MOP2(x):
+def MOP2(x):
 
 
     n=len(x)
     
-    z1=1-np.exp(-sum(np.power((x-1/sqrt(n)),2)))                                             #ckeck exp for single
+    z1=1-np.exp(-np.sum(np.power((x-1/sqrt(n)),2)))                                             #ckeck exp for single
     
-    z2=1-np.exp(-sum((x+1/sqrt(n)).^2))
+    z2=1-np.exp(-np.sum((x+1/sqrt(n))**2))
     
     z=np.array([z1,z2])
     return z
@@ -33,7 +34,7 @@ def RouletteWheelSelection(P):
     
     C=np.cumsum(P)
     
-    i=(np.array([numpy.nonzero(r<=c])[0][0][:])[0] 
+    i=(np.array([np.nonzero(r<=c)[0][0][:]]))[0] 
     return i
 
 
@@ -45,9 +46,11 @@ def CostFunction(x):
     f2=g*h
     z=np.array([f1,f2])
     return z
-def CreateGrid(p,nGrid,alpha):
+def CreateGrid(pop,nGrid,alpha):
 
-    c=np.([np.array])
+    c=[]
+    for p in pop:
+        c.append(p.Cost)
     
     cmin=np.amax(c, axis=1)
     cmax=np.amin(c, axis=1)
@@ -56,17 +59,17 @@ def CreateGrid(p,nGrid,alpha):
     cmin=cmin-alpha*dc
     cmax=cmax+alpha*dc
     
-    nObj=size(c,1)
+    nObj=list(np.shape(c))[0]
     
     empty_grid.LB=[]
     empty_grid.UB=[]
-    Grid=repmat(empty_grid,nObj,1)
+    Grid=numpy.matlib.repmat(empty_grid,nObj,1)
                                                                                          # change range(1.+1) to 0,+0
-    for j=1:nObj
+    for j in range(nObj):
         
-        cj=linspace(cmin(j),cmax(j),nGrid+1);
-        Grid(j).LB=np.array([-in,cj])
-        Grid(j).UB=[cj +inf]
+        cj=np.linspace(cmin[j],cmax[j],nGrid+1)
+        Grid[j].LB=np.array([-inf,cj])
+        Grid[j].UB=np.array([cj,+inf])
         
     return Grid
 def FindGridIndex(particle,Grid):
@@ -79,9 +82,11 @@ def FindGridIndex(particle,Grid):
     
     for j in range(0,nObj):
         
-        particle.GridSubIndex[]= \
+        particle.GridSubIndex[j]= (numpy.array([numpy.nonzero(particle.Cost[j]<Grid[j].UB)])[0][0][:])[0]
+    
+
             
-            (numpy.array([numpy.nonzero(particle.Cost(j)<Grid(j).UB)])[0][0][:])[0] 
+                 
     
 
     particle.GridIndex=particle.GridSubIndex[0]
@@ -115,7 +120,8 @@ def Mutate(x,pm,VarMin,VarMax):
     return xnew
 
 
-def Dominates(x,y)
+def Dominates(x,y):
+    
 
     if type(x) is struct:
 
@@ -135,10 +141,10 @@ def SelectLeader(rep,beta):
     GI=np.array([rep.GridIndex])
     
     # Occupied Cells
-    OC=unique(GI)
+    OC=np.unique(GI)
     
     # Number of Particles in Occupied Cells
-    N=np.zeros(size(OC))
+    N=np.zeros(list(np.shape(OC)))
     
     
     for k in range(len(OC)):
@@ -151,17 +157,20 @@ def SelectLeader(rep,beta):
     sci=RouletteWheelSelection(P)
     
     # Selected Cell
-    sc=OC(sci)
+    sc=OC[sci]
     
     # Selected Cell Members
-    SCM=find(numpy.array([numpy.nonzero(GI==sc])[0][0][:])
+    SCM=numpy.array([numpy.nonzero(GI==sc)])[0][0][:]
     
     
     # Selected Member Index
-    smi=randi([random.random() for _ in range(len(SCM))])
+    smi=np.random.randini(1,high = len(SCM))
     
     # Selected Member
-    sm=SCM(smi)
+    sm=SCM[smi]
+
+    # Leader
+    leader=rep[sm]
     
 def DeleteOneRepMemebr(rep,gamma):
 
@@ -172,7 +181,7 @@ def DeleteOneRepMemebr(rep,gamma):
     OC=numpy.unique(GI)
     
     # Number of Particles in Occupied Cells
-    N=np.zeros(size(OC))
+    N=np.zeros(list(np.shape(OC)))
     for k in range(len(OC)):
         N(k)=len(numpy.array([numpy.nonzero(GI==OC(k))])[0][0][:])
     
@@ -183,30 +192,29 @@ def DeleteOneRepMemebr(rep,gamma):
     sci=RouletteWheelSelection(P)
     
     # Selected Cell
-    sc=OC(sci)
+    sc=OC[sci]
     
     # Selected Cell Members
-    SCM=find(numpy.array([numpy.nonzero(GI==OC(k))])[0][0][:])
+    SCM=numpy.array([numpy.nonzero(GI==OC(k))])[0][0][:]
     
     # Selected Member Index
-    smi=randi([random.random() for _ in range(len(SCM))])
-    
+    smi=np.random.randini(1,high = len(SCM))
     # Selected Member
-    sm=SCM(smi)
+    sm=SCM[smi]
     
     # Delete Selected Member
-    rep(sm)=np.array([])
+    rep[sm]=np.array([])
 
     return rep  
 def DetermineDomination(particles):
     nPop = len (particles)
-    for p in particles
+    for p in particles:
         p.IsDominated=false
     for i in range(nPop-1):
-        for j in range(i,nPop)
-            if Dominates(particles[i],particles[j])
+        for j in range(i,nPop):
+            if Dominates(particles[i],particles[j]):
                particles[j].IsDominated=true
-            if Dominates(particles[j],particles[i])
+            if Dominates(particles[j],particles[i]):
                particles[i].IsDominated=true
     return particles
 
@@ -250,30 +258,30 @@ for p in particles:
     p.Cost=CostFunction(p.Position)
     
     
-    // Update Personal Best
+    # Update Personal Best
     p[i].Best.Position=p[i].Position;
     p[i].Best.Cost=p[i].Cost;
-// Determine Domination
+# Determine Domination
 particles=DetermineDomination(particles)
 rep=pop(~[pop.IsDominated]);
 Grid=CreateGrid(rep,nGrid,alpha);
-for i=1:numel(rep)
+for i in range(len(rep)):
     rep(i)=FindGridIndex(rep(i),Grid);
-end
 
 
-%% MOPSO Main Loop
+
+# MOPSO Main Loop
 
 for it in range(1,MaxIt+1):
 
     
-    for i in range(nPop)
+    for i in range(nPop):
         
         leader=SelectLeader(rep,beta)
         
         particles[i].Velocity = w*particles[i].Velocity  \
-            +c1*rand(VarSize).*(pop(i).Best.Position-pop(i).Position) \
-            +c2*rand(VarSize).*(leader.Position-pop(i).Position)
+            +np.multiply(c1*rand(VarSize),(pop(i).Best.Position-pop(i).Position)) \
+            +np.multiply(c2*rand(VarSize),(leader.Position-pop(i).Position))
         
         particles[i].Position = particles[i].Position + particles[i].Velocity
         
@@ -313,7 +321,7 @@ for it in range(1,MaxIt+1):
             pass
             
         else:
-            if rand<0.5
+            if rand<0.5:
                 particles[i].Best.Position=particles[i].Position
                 particles[i].Best.Cost=particles[i].Cost
             
@@ -349,15 +357,13 @@ for it in range(1,MaxIt+1):
 
     
     # Plot Costs
-    figure(1);
-    PlotCosts(pop,rep);
-    pause(0.01);
     
-    % Show Iteration Information
-    disp(['Iteration ' num2str(it) ': Number of Rep Members = ' num2str(numel(rep))]);
     
-    % Damping Inertia Weight
-    w=w*wdamp;
+    # Show Iteration Information
+    print 'Iteration ',num2str(it),': Number of Rep Members = ',num2str(numel(rep))
+    
+    # Damping Inertia Weight
+    w= w*wdamp
     
 
 
