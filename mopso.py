@@ -41,7 +41,7 @@ def RouletteWheelSelection(P):
 def CostFunction(x):
     n=len(x)
     f1=x[0]
-    g=  1+9/(n-1)*np.sum(x[1:end])
+    g=  1+9/(n-1)*np.sum(x[1:])
     h=1-sqrt(f1/g)
     f2=g*h
     z=np.array([f1,f2])
@@ -123,14 +123,14 @@ def Mutate(x,pm,VarMin,VarMax):
 def Dominates(x,y):
     
 
-    if type(x) is struct:
+    
 
 
-        x=x.Cost
+    x=x.Cost
     
     
-    if type(y) is struct:
-        y=y.Cost
+   
+    y=y.Cost                                                                      #ckeck again
     
 
     b=np.all(x<=y) and np.any(x<y)
@@ -148,7 +148,7 @@ def SelectLeader(rep,beta):
     
     
     for k in range(len(OC)):
-        N(k)=len(numpy.array([numpy.nonzero(GI==OC(k))])[0][0][:])
+        N[k]=len(numpy.array([numpy.nonzero(GI==OC[k])])[0][0][:])
     # Selection Probabilities
     P=np.exp(-beta*N)
     P=P/np.sum(P)
@@ -183,7 +183,7 @@ def DeleteOneRepMemebr(rep,gamma):
     # Number of Particles in Occupied Cells
     N=np.zeros(list(np.shape(OC)))
     for k in range(len(OC)):
-        N(k)=len(numpy.array([numpy.nonzero(GI==OC(k))])[0][0][:])
+        N[k]=len(numpy.array([numpy.nonzero(GI==OC[k])])[0][0][:])
     
     # Selection Probabilities
     P=np.exp(gamma*N)
@@ -195,7 +195,7 @@ def DeleteOneRepMemebr(rep,gamma):
     sc=OC[sci]
     
     # Selected Cell Members
-    SCM=numpy.array([numpy.nonzero(GI==OC(k))])[0][0][:]
+    SCM=numpy.array([numpy.nonzero(GI==OC[k])])[0][0][:]
     
     # Selected Member Index
     smi=np.random.randini(1,high = len(SCM))
@@ -209,13 +209,13 @@ def DeleteOneRepMemebr(rep,gamma):
 def DetermineDomination(particles):
     nPop = len (particles)
     for p in particles:
-        p.IsDominated=false
+        p.IsDominated=False
     for i in range(nPop-1):
         for j in range(i,nPop):
             if Dominates(particles[i],particles[j]):
-               particles[j].IsDominated=true
+               particles[j].IsDominated=True
             if Dominates(particles[j],particles[i]):
-               particles[i].IsDominated=true
+               particles[i].IsDominated=True
     return particles
 
 
@@ -239,9 +239,10 @@ class Particle:
     pass
 ''' Initialization '''
 particles = []
-for i in range(pop_size):
+for i in range(nPop):
     p = Particle()
     p.Position=np.array([])
+    p.Best = Particle()
     p.Best.Position=np.array([])
     p.Velocity=np.array([])
     p.Best.Cost = np.array([])
@@ -259,14 +260,14 @@ for p in particles:
     
     
     # Update Personal Best
-    p[i].Best.Position=p[i].Position;
-    p[i].Best.Cost=p[i].Cost;
+    p.Best.Position=p.Position
+    p.Best.Cost=p.Cost
 # Determine Domination
 particles=DetermineDomination(particles)
-rep=pop(~[pop.IsDominated]);
-Grid=CreateGrid(rep,nGrid,alpha);
+rep=particles(~[particles.IsDominated])
+Grid=CreateGrid(rep,nGrid,alpha)
 for i in range(len(rep)):
-    rep(i)=FindGridIndex(rep(i),Grid);
+    rep[i]=FindGridIndex(rep[i],Grid)
 
 
 
@@ -295,7 +296,7 @@ for it in range(1,MaxIt+1):
         pm=(1-(it-1)/(MaxIt-1))**(1/mu)
         if rand<pm:
 
-            NewSol.Position=Mutate(particles[i].Position,pm,VarMin,VarMax);
+            NewSol.Position=Mutate(particles[i].Position,pm,VarMin,VarMax)
             NewSol.Cost=CostFunction(NewSol.Position)
             if Dominates(NewSol,particles[i]):
                 particles[i].Position=NewSol.Position
