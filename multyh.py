@@ -42,21 +42,21 @@ def RouletteWheelSelection(P):
 
 def CostFunction(x):
     n=len(x)
-    f1=x[0]
+    f1=x[0]**2+x[1]**2
  
     
-    den = (n-1)*np.sum(x[1:])
-   
-    g=  1+9/den
-    h=1-sqrt(f1/g)
-    f2=g*h
+    
+    f2 = (x[0]-1)**2+x[1]**2
     z=np.array([f1,f2])
+    
+    
     return z
 class mty_grid:
     pass
 def CreateGrid(pop,nGrid,alpha):
 
     c=[]
+    
     for p in pop:
         c.append(p.Cost)
     c=np.array([c])
@@ -81,7 +81,7 @@ def CreateGrid(pop,nGrid,alpha):
         GridLB[j]=[-(inf_arr),cj]
         GridUB[j]=[cj,inf_arr]
         
-        
+    
     return GridLB,GridUB
 def FindGridIndex(particle,GridLB,GridUB):
 
@@ -95,7 +95,7 @@ def FindGridIndex(particle,GridLB,GridUB):
     for j in range(0,nObj):
         
         
-        particle.GridSubIndex[0][j]= (np.array([np.nonzero(particle.Cost[j]<GridUB[0][j])])[0][0][:])[0]
+        particle.GridSubIndex[0][j]= (np.array([np.nonzero(particle.Cost[j]<=GridUB[j][0])])[0][0][:])[0]
        
 
             
@@ -198,9 +198,9 @@ def SelectLeader(rep,beta):
 
     return leader
 def DeleteOneRepMemebr(rep,gamma):
-
+    repd = [re for re in rep]
     #Grid Index of All Repository Members
-    GI=np.array([re.GridIndex for re in rep])
+    GI=np.array([re.GridIndex for re in repd])
     
     # Occupied Cells
     OC=np.unique(GI)
@@ -223,7 +223,7 @@ def DeleteOneRepMemebr(rep,gamma):
     SCM=np.array([np.nonzero(GI==OC[k])])[0][0][:]
     
     # Selected Member Index
-    smi=np.random.randini(1,high = len(SCM))
+    smi=np.random.randint(1,high = len(SCM))
     # Selected Member
     sm=SCM[smi]
     
@@ -243,13 +243,73 @@ def DetermineDomination(particles):
                particles[i].IsDominated=True
     return particles
 
+def neighbor(solution):
+     a =random. random()
+     if random.random() > 0.5:
+ 
+         
+         if a > 0.5:
+             solution[0] = solution[0]-0.01
+         else:
+             solution[0] = solution[0]+0.01
+ 
+     else:
+         if a > 0.5:
+             solution[1] = solution[1]-0.01
+         else:
+             solution[1] = solution[1]+0.01
+ 
+     return solution
+ 
+ 
+ 
+def acceptance_probability(old_cost, new_cost, T):
+	ap = 0
+	return ap
+def anneal(particle,T):
+    particle.Cost = CostFunction(particle.Position)
+    given_posiion = particle.Position
+    
+    T_min = 0.00001
+    alpha = 0.9
+    newSol = Particle()
+    while T > T_min:
+        i = 1
+        while i <= 100:
+            new_position = neighbor(particle.Position)
+            newSol.Position = new_position
+            newSol.Cost = CostFunction(newSol.Position)
+            ap = 0.5*T
+            if Dominates(newSol,particle):
+                
+                particle.Position=newSol.Position
+                particle.Cost=newSol.Cost
+            elif Dominates(particle,newSol):
+                pass
+            else:
+                if random.random()> ap:
+                    particle.Position=newSol.Position
+                    particle.Cost=newSol.Cost
+                                        
+                
+                    
+            '''   
+            if particle.Position[0] >VarMax or particle.Position[0]<VarMin or particle.Position[1] >VarMax or particle.Position[1]<VarMin:
+                print particle.Position,
+                particle.Position = given_posiion
+                particle.Cost = CostFunction(particle.Position)
+                print 'shiffffffffffffffffffffffffffffffffffffffffft'
+            '''
+            i += 1
+        T = T*alpha
+    return particle
 
 nVar=2    #Number of Decision Variables
 VarSize=np.array([1,nVar])  # Size of Decision Variables Matrix
 VarMin=0          # Lower Bound of Variables
 VarMax=1          # Upper Bound of Variables
-MaxIt=100          # Maximum Number of Iterations
-nPop=20       # Population Size
+MaxIt=10         # Maximum Number of Iterations
+nPop=200   # Population Size
 nRep=100         # Repository Size
 w=0.5              # Inertia Weight
 wdamp=0.99         # Intertia Weight Damping Rate
@@ -260,6 +320,7 @@ alpha=0.1          # Inflation Rate
 beta=2             # Leader Selection Pressure
 gamma=2            # Deletion Selection Pressure
 mu=0.1             # Mutation Rate
+init_factor = 1
 class Particle:
     pass
 ''' Initialization '''
@@ -278,7 +339,7 @@ for i in range(nPop):
     particles.append(p)
 
 for p in particles:
-    p.Position=np.array([random.random() for _ in range(nVar)] )
+    p.Position=np.array([init_factor*random.random() for _ in range(nVar)] )
     
     p.Velocity=np.array([0 for _ in range(nVar)])
     
@@ -288,16 +349,20 @@ for p in particles:
     # Update Personal Best
     p.Best.Position=p.Position
     p.Best.Cost=p.Cost
-# Determine Domination
+
 particles=DetermineDomination(particles)
 pre_rep = []
 for p in particles:
     pre_rep.append(not p.IsDominated)
+
 particle_array = np.array(particles)
 rep=particle_array[np.array(pre_rep)]
+
+    
 GridLB,GridUB=CreateGrid(rep,nGrid,alpha)
 for i in range(len(rep)):
     rep[i]=FindGridIndex(rep[i],GridLB,GridUB)
+
 
 
 
@@ -307,8 +372,9 @@ for it in range(1,MaxIt+1):
 
     
     for i in range(nPop):
-        
         leader=SelectLeader(rep,beta)
+
+        
  
         particles[i].Velocity = w*particles[i].Velocity  \
             +np.multiply(c1*np.random.rand(1,nVar),(particles[i].Best.Position-particles[i].Position)) \
@@ -322,31 +388,7 @@ for it in range(1,MaxIt+1):
         
         particles[i].Cost = CostFunction(particles[i].Position)
 
-        NewSol = Particle()
-        # Apply Mutation
-        pm=(1-(it-1)/(MaxIt-1))**(1/mu)
-        
-        if random.random()<pm:
-            
-            NewSol.Position=Mutate(particles[i].Position,pm,VarMin,VarMax)
-            NewSol.Cost=CostFunction(NewSol.Position)
-            
-            if Dominates(NewSol,particles[i]):
-                
-                particles[i].Position=NewSol.Position
-                particles[i].Cost=NewSol.Cost
-                
-
-            elif Dominates(particles[i],NewSol):
-                pass
-
-            else:
-
-                if random.random()<0.5:
-                    particles[i].Position=NewSol.Position
-                    particles[i].Cost=NewSol.Cost
-                
-            
+                    
         
         
         if Dominates(particles[i],particles[i].Best):
@@ -360,52 +402,83 @@ for it in range(1,MaxIt+1):
             if random.random()<0.5:
                 particles[i].Best.Position=particles[i].Position
                 particles[i].Best.Cost=particles[i].Cost
-            
-               
-    DetermineDomination(particles)
+    
+    particles = DetermineDomination(particles)    
     dom_particles = np.array([ not p.IsDominated for p in particles])
     # Add Non-Dominated Particles to REPOSITORY
     parray = np.array(particles)
- 
-    rep=np.array([rep,parray[dom_particles]]) #ok
+    
+    rep=np.array(parray[dom_particles]) #ok
     
     
     # Determine Domination of New Resository Members
-    rep=DetermineDomination(rep[0])
+    rep=DetermineDomination(rep)
     
     # Keep only Non-Dminated Memebrs in the Repository
     pre_rep1 = []
+    
     for p in rep:
         pre_rep1.append(not p.IsDominated)
+    pre_rep1    = np.array(pre_rep1) 
+    
+ 
+        
     rep=rep[pre_rep1]
     
+    
+       
     # Update Grid
     GridLB,GridUB=CreateGrid(rep,nGrid,alpha)
-
 
     # Update Grid Indices
     for i in range(0,len(rep)):
         rep[i]=FindGridIndex(rep[i],GridLB,GridUB)
     
-    
+    '''
     # Check if Repository is Full
     if len(rep)>nRep:
         
         Extra=len(rep)-nRep
         for e in range(1,Extra+1):
             rep=DeleteOneRepMemebr(rep,gamma)
-        
-        
+       
+    '''    
 
-    
-    # Plot Costs
+            
+               
     
     
     # Show Iteration Information
-    print 'Iteration ',str(it),': Number of Rep Members = ',str(len(rep)),leader.Cost
+    print 'Iteration ',str(it),': Number of Rep Members = ',str(len(rep)),leader.Cost,leader.Position
     
     # Damping Inertia Weight
     w= w*wdamp
+for r in rep:
+    r = anneal(r,1)
+    print r.Cost
+rep=DetermineDomination(rep)
     
+    # Keep only Non-Dminated Memebrs in the Repository
+pre_rep2 = []
+    
+for p in rep:
+    pre_rep2.append(not p.IsDominated)
+pre_rep2    = np.array(pre_rep2) 
+    
+ 
+        
+rep=rep[pre_rep2]
+for r in rep:
+    print rep.Cost,'.................................'
+    
+    
+       
+    # Update Grid
+GridLB,GridUB=CreateGrid(rep,nGrid,alpha)
 
+    # Update Grid Indices
+for i in range(0,len(rep)):
+    rep[i]=FindGridIndex(rep[i],GridLB,GridUB)
 
+sol = SelectLeader(rep,beta)
+print '/////////////',sol.Cost,'//////////////'
