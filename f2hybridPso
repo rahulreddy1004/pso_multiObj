@@ -42,19 +42,16 @@ def RouletteWheelSelection(P):
 
 
 def CostFunction(x):
-    n=len(x)
-    f1=4*(x[0]**2)+4*(x[1]**2)
- 
     
-    den = (n-1)*np.sum(x[1:])
-   
-    g=  1+9/den
-    h=1-sqrt(f1/g)
-    f2=g*h
-    f2 = (x[0]-5)**2+(x[1]-5)**2
-    z=np.array([f1,f2])
+    a=0.8
     
+    b=3
     
+    z1=np.sum(-10*np.exp(-0.2*np.sqrt(np.power(x[0:-1],2)+np.power(x[1:],2))))
+    
+    z2=np.sum(np.power(np.absolute(x),a)+5*(np.power((np.sin(x)),b)))
+    
+    z=np.array([z1,z2])
     return z
 class mty_grid:
     pass
@@ -249,16 +246,79 @@ def DetermineDomination(particles):
                particles[i].IsDominated=True
     return particles
 
-
-nVar=2    #Number of Decision Variables
+def neighbor(solution):
+     a,b =random. random(),random.random()
+     if b < 0.33:
+ 
+         
+         if a > 0.5:
+             solution[0] = solution[0]-0.01
+         else:
+             solution[0] = solution[0]+0.01
+ 
+     elif b<0.66 and b>0.33:
+         if a > 0.5:
+             solution[1] = solution[1]-0.01
+         else:
+             solution[1] = solution[1]+0.01
+     else:
+         if a > 0.5:
+             solution[2] = solution[1]-0.01
+         else:
+             solution[2] = solution[1]+0.01
+     return solution
+ 
+ 
+ 
+def acceptance_probability(old_cost, new_cost, T):
+	ap = 0
+	return ap
+def anneal(particle,T):
+    particle.Cost = CostFunction(particle.Position)
+    given_posiion = particle.Position
+    
+    T_min = 0.00001
+    alpha = 0.9
+    newSol = Particle()
+    while T > T_min:
+        i = 1
+        while i <= 100:
+            new_position = neighbor(particle.Position)
+            newSol.Position = new_position
+            newSol.Cost = CostFunction(newSol.Position)
+            ap = 0.5*T
+            if Dominates(newSol,particle):
+                
+                particle.Position=newSol.Position
+                particle.Cost=newSol.Cost
+            elif Dominates(particle,newSol):
+                pass
+            else:
+                if random.random()> ap:
+                    particle.Position=newSol.Position
+                    particle.Cost=newSol.Cost
+                                        
+                
+                    
+            '''   
+            if particle.Position[0] >VarMax or particle.Position[0]<VarMin or particle.Position[1] >VarMax or particle.Position[1]<VarMin:
+                print particle.Position,
+                particle.Position = given_posiion
+                particle.Cost = CostFunction(particle.Position)
+                print 'shiffffffffffffffffffffffffffffffffffffffffft'
+            '''
+            i += 1
+        T = T*alpha
+    return particle
+nVar=3    #Number of Decision Variables
 VarSize=np.array([1,nVar])  # Size of Decision Variables Matrix
-VarMin=0          # Lower Bound of Variables
-VarMax=100        # Upper Bound of Variables
-MaxIt=25  # Maximum Number of Iterations
+VarMin=-5          # Lower Bound of Variables
+VarMax=5        # Upper Bound of Variables
+MaxIt=40  # Maximum Number of Iterations
 nPop  = 200 # Population Size
 nRep=100         # Repository Size
 w=0.5              # Inertia Weight
-wdamp=0.99         # Intertia Weight Damping Rate
+wdamp=0.98        # Intertia Weight Damping Rate
 c1=0.5               # Personal Learning Coefficient
 c2=1               # Global Learning Coefficient
 nGrid=7           # Number of Grids per Dimension
@@ -266,7 +326,7 @@ alpha=0.1          # Inflation Rate
 beta=2             # Leader Selection Pressure
 gamma=2            # Deletion Selection Pressure
 mu=0.1             # Mutation Rate
-init_factor = 100
+init_factor = 10
 
 class Particle:
     pass
@@ -290,7 +350,7 @@ for i in range(nPop):
     p.Cost = np.array([])
     Bestparticles.append(p)
 for p in particles:
-    p.Position=np.array([init_factor*random.random() for _ in range(nVar)] )
+    p.Position=np.array([init_factor*(random.random()-0.5) for _ in range(nVar)] )
     
     p.Velocity=np.array([0 for _ in range(nVar)])
     
@@ -357,10 +417,10 @@ for it in range(1,MaxIt+1):
         
         
         if Dominates(particles[i],Bestparticles[i]):
-            a,b = 0,0
-            a =+ particles[i].Position
+            
+            a = particles[i].Position
             Bestparticles[i].Position=a
-            b += particles[i].Cost
+            b = particles[i].Cost
             Bestparticles[i].Cost=b
             
         elif Dominates(Bestparticles[i],particles[i]):
@@ -368,10 +428,11 @@ for it in range(1,MaxIt+1):
             
         else:
             if random.random()<0.5:
-                a,b = 0,0
-                a =+ particles[i].Position
+                
+                a = particles[i].Position
+                
                 Bestparticles[i].Position=a
-                b += particles[i].Cost
+                b = particles[i].Cost
                 Bestparticles[i].Cost=b
         
      
@@ -421,14 +482,14 @@ for it in range(1,MaxIt+1):
         x.append(r.Position[0])
         y.append(r.Position[1])
     plt.plot(x,y, 'ro')
-    plt.axis([0, 100, 0, 100])
+    plt.axis([-5, 5, -5, 5])
     plt.show()
     x,y = [],[]
     for r in particles:
         x.append(r.Cost[0])
         y.append(r.Cost[1])
     plt.plot(x,y, 'ro')
-    plt.axis([0, 200, 0, 200])
+    plt.axis([-20,-14 , -12, 2])
     plt.show()
             
                
@@ -440,7 +501,7 @@ for it in range(1,MaxIt+1):
     
     # Damping Inertia Weight
     w= w*wdamp
-    
+
 x,y = [],[]
 for r in rep:
     x.append(r.Cost[0])
@@ -448,4 +509,26 @@ for r in rep:
 plt.plot(x,y, 'ro')
 plt.axis([0, 200, 0, 200])
 plt.show()
-
+for r in particles:
+    r = anneal(r,1)
+    
+particles=DetermineDomination(particles)
+    
+    # Keep only Non-Dminated Memebrs in the Repository
+pre_rep2 = []
+    
+for p in particles:
+    pre_rep2.append(not p.IsDominated)
+pre_rep2    = np.array(pre_rep2) 
+    
+ 
+particles = np.array(particles)     
+rep=particles[pre_rep2]
+print 'annealed'
+x,y = [],[]
+for r in rep:
+    x.append(r.Cost[0])
+    y.append(r.Cost[1])
+plt.plot(x,y, 'ro')
+plt.axis([0, 200, 0, 200])
+plt.show()

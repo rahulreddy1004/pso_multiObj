@@ -134,7 +134,10 @@ def Mutate(x,pm,VarMin,VarMax):
         ub=VarMax
     
     
-    xnew = x
+    xnew = [0,0]
+    xnew[0] =xnew[0]+ x[0]                                         #genralise for nVar
+    xnew[1] =xnew[1]+ x[1]
+    xnew = np.array(xnew)
     xnew[j]=np.random.uniform(lb,ub)
 
     return xnew
@@ -250,23 +253,23 @@ def DetermineDomination(particles):
     return particles
 
 
-nVar=2    #Number of Decision Variables
+nVar=2              #Number of Decision Variables
 VarSize=np.array([1,nVar])  # Size of Decision Variables Matrix
-VarMin=0          # Lower Bound of Variables
-VarMax=100        # Upper Bound of Variables
-MaxIt=25  # Maximum Number of Iterations
-nPop  = 200 # Population Size
-nRep=100         # Repository Size
-w=0.5              # Inertia Weight
-wdamp=0.99         # Intertia Weight Damping Rate
+VarMin=0             # Lower Bound of Variables
+VarMax=10          # Upper Bound of Variables
+MaxIt=100                   # Maximum Number of Iterations
+nPop  = 200                   # Population Size
+nRep=100                    # Repository Size
+w=0.5                # Inertia Weight
+wdamp=0.99           # Intertia Weight Damping Rate
 c1=0.5               # Personal Learning Coefficient
-c2=1               # Global Learning Coefficient
-nGrid=7           # Number of Grids per Dimension
-alpha=0.1          # Inflation Rate
-beta=2             # Leader Selection Pressure
-gamma=2            # Deletion Selection Pressure
-mu=0.1             # Mutation Rate
-init_factor = 100
+c2=1                 # Global Learning Coefficient
+nGrid=7              # Number of Grids per Dimension
+alpha=0.1            # Inflation Rate
+beta=2               # Leader Selection Pressure
+gamma=2              # Deletion Selection Pressure
+mu=0.1               # Mutation Rate
+init_factor = 10
 
 class Particle:
     pass
@@ -344,7 +347,7 @@ for it in range(1,MaxIt+1):
         particles[i].Velocity = w*particles[i].Velocity  \
             +np.multiply(c1*np.random.rand(1,nVar),(Bestparticles[i].Position-particles[i].Position)) \
             +np.multiply(c2*np.random.rand(1,nVar),(leader.Position-particles[i].Position))
-        
+        leader.Position
         particles[i].Position = particles[i].Position + particles[i].Velocity[0]
         
         
@@ -352,15 +355,37 @@ for it in range(1,MaxIt+1):
         particles[i].Position = np.minimum(particles[i].Position, VarMax)
         
         particles[i].Cost = CostFunction(particles[i].Position)
-
+        
                     
         
+        NewSol = Particle()
+        # Apply Mutation
+        pm=(1-(it)/(MaxIt-1))**(1/mu)
         
+        if random.random()<1:
+            
+            NewSol.Position=Mutate(particles[i].Position,pm,VarMin,VarMax)
+            NewSol.Cost=CostFunction(NewSol.Position)
+            
+            if Dominates(NewSol,particles[i]):
+                
+                particles[i].Position=NewSol.Position
+                particles[i].Cost=NewSol.Cost
+               
+
+            elif Dominates(particles[i],NewSol):
+                pass
+            else:
+                if random.random() >0.5:
+                    particles[i].Position=NewSol.Position
+                    particles[i].Cost=NewSol.Cost
+                    
+           
         if Dominates(particles[i],Bestparticles[i]):
-            a,b = 0,0
-            a =+ particles[i].Position
+            a,b = [0 for i in range(nVar)],[0 for i in range(nVar)]
+            a =  particles[i].Position
             Bestparticles[i].Position=a
-            b += particles[i].Cost
+            b = particles[i].Cost
             Bestparticles[i].Cost=b
             
         elif Dominates(Bestparticles[i],particles[i]):
@@ -369,9 +394,9 @@ for it in range(1,MaxIt+1):
         else:
             if random.random()<0.5:
                 a,b = 0,0
-                a =+ particles[i].Position
+                a = particles[i].Position
                 Bestparticles[i].Position=a
-                b += particles[i].Cost
+                b = particles[i].Cost
                 Bestparticles[i].Cost=b
         
      
@@ -428,7 +453,7 @@ for it in range(1,MaxIt+1):
         x.append(r.Cost[0])
         y.append(r.Cost[1])
     plt.plot(x,y, 'ro')
-    plt.axis([0, 200, 0, 200])
+    plt.axis([0, 120, 0, 50])
     plt.show()
             
                
@@ -446,6 +471,6 @@ for r in rep:
     x.append(r.Cost[0])
     y.append(r.Cost[1])
 plt.plot(x,y, 'ro')
-plt.axis([0, 200, 0, 200])
+plt.axis([0, 120, 0, 50])
 plt.show()
 
