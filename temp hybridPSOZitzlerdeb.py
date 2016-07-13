@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jul 12 15:32:26 2016
-
-@author: rahul_reddy
-"""
 import numpy as np
 import numpy.matlib as matlib
 import random
@@ -48,19 +42,19 @@ def RouletteWheelSelection(P):
 
 
 def CostFunction(x):
+    
     n=len(x)
-    f1=4*(x[0]**2)+4*(x[1]**2)
- 
-    
-    den = (n-1)*np.sum(x[1:])
-   
+    f1=abs(x[0])
     
     
+    den = np.sum(x[1:])
+     
+    g=  1+((9)/29)*(den)
     
-    f2 = (x[0]-5)**2+(x[1]-5)**2
+    g = abs(g)
+    h=1-sqrt(f1/g)
+    f2=g*h
     z=np.array([f1,f2])
-    
-    
     return z
 class mty_grid:
     pass
@@ -255,23 +249,15 @@ def DetermineDomination(particles):
                particles[i].IsDominated=True
     return particles
 
-def neighbor(solution):
-     a =random. random()
-     if random.random() > 0.5:
- 
-         
-         if a > 0.5:
-             solution[0] = solution[0]-0.01
-         else:
-             solution[0] = solution[0]+0.01
- 
-     else:
-         if a > 0.5:
-             solution[1] = solution[1]-0.01
-         else:
-             solution[1] = solution[1]+0.01
- 
-     return solution
+def neighbor(x):
+    nVar=len(x)
+    j=np.random.randint(0, high=nVar)
+    if random.random()>0.5:
+        x[j] = x[j] + 0.05
+    else:
+        x[j] = x[j] - 0.05
+        
+    return x
  
  
  
@@ -315,12 +301,12 @@ def anneal(particle,T):
             i += 1
         T = T*alpha
     return particle
-nVar=2    #Number of Decision Variables
+nVar=30    #Number of Decision Variables
 VarSize=np.array([1,nVar])  # Size of Decision Variables Matrix
 VarMin=0          # Lower Bound of Variables
-VarMax=100        # Upper Bound of Variables
-MaxIt=40  # Maximum Number of Iterations
-nPop  = 100 # Population Size
+VarMax=1        # Upper Bound of Variables
+MaxIt=50 # Maximum Number of Iterations
+nPop  = 80 # Population Size
 nRep=100         # Repository Size
 w=0.5              # Inertia Weight
 wdamp=0.98        # Intertia Weight Damping Rate
@@ -331,7 +317,7 @@ alpha=0.1          # Inflation Rate
 beta=2             # Leader Selection Pressure
 gamma=2            # Deletion Selection Pressure
 mu=0.1             # Mutation Rate
-init_factor = 100
+init_factor = 1
 
 class Particle:
     pass
@@ -343,11 +329,12 @@ for i in range(nPop):
     p.Position=np.array([])
     
     p.Velocity=np.array([])
-    p.t = 0
+    
     p.Cost = np.array([])
     p.IsDominated =np.array([])
     p.GridIndex = np.array([])
     p.GridSubIndex =np.array([])
+    p.t = 0
     particles.append(p)
 for i in range(nPop):
     p = Particle()
@@ -355,7 +342,7 @@ for i in range(nPop):
     p.Cost = np.array([])
     Bestparticles.append(p)
 for p in particles:
-    p.Position=np.array([init_factor*random.random() for _ in range(nVar)] )
+    p.Position=np.array([init_factor*(random.random()) for _ in range(nVar)] )
     
     p.Velocity=np.array([0 for _ in range(nVar)])
     
@@ -365,13 +352,7 @@ for p in particles:
 for i in range(nPop):    # Update Personal Best
     Bestparticles[i].Position=particles[i].Position
     Bestparticles[i].Cost=particles[i].Cost
-x,y = [],[]
-for r in particles:
-    x.append(r.Cost[0])
-    y.append(r.Cost[1])
-plt.plot(x,y, 'ro')
-plt.axis([0, 100, 0, 100])
-plt.show()
+
 
 particles=DetermineDomination(particles)
 pre_rep = []
@@ -381,15 +362,7 @@ for p in particles:
 particle_array = np.array(particles)
 rep=particle_array[np.array(pre_rep)]
 
-x,y = [],[]
-for r in rep:
-    
-    x.append(r.Cost[0])
-    
-    y.append(r.Cost[1])
-plt.plot(x,y, 'ro')
-plt.axis([0, 50, 0, 50])
-plt.show()    
+   
 GridLB,GridUB=CreateGrid(rep,nGrid,alpha)
 for i in range(len(rep)):
     rep[i]=FindGridIndex(rep[i],GridLB,GridUB)
@@ -483,13 +456,6 @@ for it in range(1,MaxIt+1):
     '''    
     
     
-    x,y = [],[]
-    for r in particles:
-        x.append(r.Cost[0])
-        y.append(r.Cost[1])
-    plt.plot(x,y, 'ro')
-    plt.axis([0, 120, 0, 50])
-    plt.show()
             
                
    
@@ -500,6 +466,7 @@ for it in range(1,MaxIt+1):
     
     # Damping Inertia Weight
     w= w*wdamp
+
 temperature_arr = []
 for p in particles:
     p.t = sqrt(p.Velocity[0][0]**2+p.Velocity[0][1]**2)
@@ -517,7 +484,7 @@ for fillslot in range(len(temperature_arr)-1,0,-1):
     particles[fillslot] = particles[positionOfMax]
     temperature_arr[positionOfMax] = temp
     particles[positionOfMax] = temp1
-
+print particles[:10]
 t1,t2,t3 = 0,0,0
 for p in particles[0:(len(particles))/3]:
     t1 = t1 + (p.t)**2
@@ -531,7 +498,7 @@ for r in rep:
     x.append(r.Cost[0])
     y.append(r.Cost[1])
 plt.plot(x,y, 'ro')
-plt.axis([0, 120, 0, 50])
+plt.axis([0,1, 0,1])
 plt.show()
 for r in particles[0:(len(particles))/3]:
     r = anneal(r,t1)
@@ -550,7 +517,7 @@ for r in particles[2*(len(particles))/3:]:
     e.append(r.Cost[0])
     f.append(r.Cost[1])
 plt.plot(a,b, 'ro',c,d,'bs',e,f,'g^')
-plt.axis([0, 120, 0, 50])
+plt.axis([0, 1, 0,1])
 plt.show()
 particles=DetermineDomination(particles)
     
@@ -570,6 +537,5 @@ for r in rep:
     x.append(r.Cost[0])
     y.append(r.Cost[1])
 plt.plot(x,y, 'ro')
-plt.axis([0, 120, 0, 50])
+plt.axis([0, 1, 0,1])
 plt.show()
-
